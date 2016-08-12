@@ -1,0 +1,373 @@
+cameras:
+    camera1:
+        type: perspective
+
+lights:
+    light1:
+        type: directional
+        direction: [0, 1, -.5]
+        diffuse: .3
+        ambient: 1
+
+labels-global:
+      - &text_visible_continent         true
+      - &text_visible_admin             true
+      - &text_visible_populated_places  true
+
+
+basemap-colors:
+  areas:
+      - &scene1                   white
+      - &earth1                   '#f6f6f4'  #land
+      - &water1                   '#B2B2B2'  #oceans
+      - &water1_o                 '#9dc3de'  #water stroke
+      - &water2                   '#9dc3de'  #water, not oceans
+  boundaries:
+      - &country_boundary         '#969696'
+      - &region_boundary          '#B8B8B8'
+      - &subregion_boundary       '#000'
+
+  labels:
+      - &text_fill                '#6c6c6c'    # darker gray, for countries
+      - &text_fill_admin          '#BFBFBF'    # BLACK
+      - &text_fill_water          '#BABABA'    # water text
+      - &text_stroke              '#f6f6f4'    # land color
+      - &text_stroke_water        [0.85, 0.85, 0.85]    # water stroke color
+      - &text_font_family         'Open Sans'  # branding in asperational Unicode, yo (or Helvetica)
+
+
+
+sources:
+    osm:
+        type: TopoJSON
+        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-5QLfB3V
+        max_zoom: 16
+
+
+layers:
+    #style the basemap, B & W
+    earth:
+        data: { source: osm, layer: earth }
+        draw:
+            polygons:
+                order: function() { return feature.sort_key; }
+                color: *earth1
+
+
+    water-ocean:
+        data: { source: osm, layer: water }
+        filter: {kind: ocean}
+        draw:
+            polygons:
+                order: function() { return feature.sort_key; }
+                color: *water1
+            text:
+                visible: true
+                font:
+                    fill: *text_fill_water
+                    family: *text_font_family
+                    style: italic
+                    weight: 500
+                    size: 16px
+                    stroke: { color: *text_stroke_water, width: 4 }
+
+        water_boundaries-ocean:
+            filter: { boundary: yes, $zoom: { min: 10 } }
+            draw:
+                lines:
+                    order: function() { return feature.sort_key; }
+                    color: '*water1_o'
+                    width: [[10,1px],[12,2px]]
+                    join: round
+    water-not-ocean:
+        data: { source: osm, layer: water }
+        filter: { not: { kind: ocean } }
+        draw:
+            polygons:
+                order: function() { return feature.sort_key; }
+                color: *water1
+            text:
+                visible: false
+                font:
+                    family: *text_font_family
+                    weight: 500
+
+
+    boundaries:
+        data: { source: osm, layer: boundaries }
+        # country subdivisions (states, provinces)
+        draw:
+            lines:
+                interactive: true
+                order: function() { return feature.sort_key; }
+        admin2:
+            filter:
+                any:
+                    - admin_level: 2
+            draw:
+                lines:
+                    interactive: true
+                    color: *country_boundary
+                    # array here specifies pixel width at various
+                    width: [[1, 0.5px], [2, 1.0px], [4, 1.5px], [9, 2.5px], [14, 3.5px], [16, 4.5px], [17, 14m]]
+
+            water:
+                filter: { maritime: yes }
+                draw:
+                    lines:
+                        order: function() { return (feature.sort_key - 2); }
+                        color: blue
+
+
+        admin3:
+            filter:
+                any:
+                    - admin_level: 3
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+            water:
+                filter: { maritime_boundary: yes }
+                draw:
+                    lines:
+                        visible: false
+            early:
+                filter: { scalerank: [0,3,4,5,6,7,8,9,10], $zoom: { max: 8 } }
+                draw:
+                    lines:
+                        visible: false
+
+
+        admin4:
+            filter:
+                any:
+                    - admin_level: 4
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+        admin5:
+            filter:
+                any:
+                    - admin_level: 5
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+
+        admin6:
+            filter: { admin_level: 6, $zoom: { min: 5 } }
+            draw:
+                lines:
+                    interactive: true
+                    color: '500000'
+                    width: [[2, 1.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+        admin7:
+            filter:
+                any:
+                    - admin_level: 7
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+
+        admin8:
+            filter:
+                any:
+                    - admin_level: 8
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+
+
+        admin9:
+            filter:
+                any:
+                    - admin_level: 9
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+
+        admin10:
+            filter:
+                any:
+                    - admin_level: 10
+            draw:
+                lines:
+                    interactive: true
+                    color: *region_boundary
+                    width: [[2, 0.75px], [3, 1px], [5, 1.5px], [9, 3.5px], [14, 5.5px], [16, 6.5px], [17, 16m]]
+
+
+
+    places:
+        data: { source: osm, layer: places }
+        filter: { not: { kind: [ocean, sea] } }
+        draw:
+            text:
+                visible: false    # labels are enabled by each layer below
+                font:
+                    family: *text_font_family
+
+        country-z2:
+            filter:
+               all:
+                   - kind: [country]
+                   - $zoom: [2]
+                   - name: ["United States of America","Brasil","中华人民共和国","Россия","Canada","Kalaallit Nunaat","Ísland","Australia","India","日本","Guam","Indonesia","South Africa","مصر","Nigeria","Kenya"]
+            draw:
+                text:
+                    visible: true
+                    text_source: function() { return feature["name:en"] || feature["name"]; }
+                    font:
+                        fill: *text_fill
+                        weight: 400
+                        size: 10px
+                        transform: uppercase
+        country-z3:
+            filter: { name: true, population: true, kind: [country], $zoom: [3] }
+            draw:
+                text:
+                    priority: 3
+                    visible: *text_visible_admin
+                    text_source: function() { return feature["name:en"] || feature["name"]; }
+                    font:
+                        fill: *text_fill
+                        size: 11px
+                        weight: 600
+                        # stroke: { color: *text_stroke, width: 4 }
+                        transform: uppercase
+    #            icons:
+    #                size: [[13, 12px], [15, 18px]]
+    #                interactive: true
+    #                sprite: *townspot_sprite
+            early-ones:
+                # US, Brazil, China, Russia, Canada, Greenland, Iceland, Australia, India, Japan, Guam, Indonesia, South Africa, Egypt, Nigeria, Kenya
+                filter: { not: { name: ["United States of America","Brasil","中华人民共和国","Россия","Canada","Kalaallit Nunaat","Ísland","Australia","India","日本","Guam","Indonesia","South Africa","مصر","Nigeria","Kenya"] }, $zoom: {min: 3, max: 4} }
+                draw:
+                    text:
+                        visible: false
+        country-z4:
+            filter: { name: true, population: true, kind: [country], $zoom: [4] }
+            draw:
+                text:
+                    priority: 3
+                    visible: *text_visible_admin
+                    text_source: function() { return feature["name:en"] || feature["name"]; }
+                    font:
+                        size: 12px
+                        weight: 600
+                        fill: *text_fill
+                        # stroke: { color: *text_stroke, width: 4 }
+                        transform: uppercase
+
+            early-ones-z4:
+                filter: { name: [Nederland,Luxembourg,Liechtenstein,San Marino,Civitatis Vaticanæ,Crna Gora,Македонија,The Gambia,Burundi,Swaziland,الإمارات العربية المتحدة,العراق,Singapore,El Salvador,Belize,Trinidad and Tobago, Saint Lucia, Montserrat,Anguilla,República Dominicana,Bahamas,British Virgin Islands,Antigua and Barbuda,Grenada,Sint Maarten,Saint Kitts and Nevis,Cayman Islands,België - Belgique - Belgien], $zoom: {min: 4, max: 5} }
+                draw:
+                    text:
+                        visible: false
+        country-z5:
+            filter:
+                all:
+                    - name: true
+                    - population: true
+                    - kind: [country]
+                    - $zoom: [5]
+                any:
+                    - { population: { min: 5000000 } }
+            draw:
+                text:
+                    priority: 3
+                    visible: *text_visible_admin
+                    text_source: function() { return feature["name:en"] || feature["name"]; }
+                    font:
+                        size: 14px
+                        weight: 400
+                        fill: *text_fill
+                        # stroke: { color: *text_stroke, width: 4 }
+                        transform: uppercase
+    #            icons:
+    #                size: [[13, 12px], [15, 18px]]
+    #                interactive: true
+    #                sprite: *townspot_sprite
+            early-ones-z5:
+                filter: { name: [Luxembourg,Liechtenstein,San Marino,Civitatis Vaticanæ,El Salvador,Belize,België - Belgique - Belgien], $zoom: {min: 5, max: 6} }
+                draw:
+                    text:
+                        visible: false
+        country-z6:
+            # South Ossetia and Abkhazia aren't countries (they are disputed areas)
+            filter: { name: true, kind: [country], $zoom: [6] }
+            draw:
+                text:
+                    priority: 3
+                    visible: *text_visible_admin
+                    text_source: function() { return feature["name:en"] || feature["name"]; }
+                    font:
+                        size: 16px
+                        weight: 600
+                        fill: *text_fill
+                        # stroke: { color: *text_stroke, width: 4 }
+                        transform: uppercase
+            small-ones-z6:
+                filter: { name: [Luxembourg,Liechtenstein,San Marino,Civitatis Vaticanæ,België - Belgique - Belgien,Хуссар Ирыстон,Аҧсны - Абхазия], $zoom: {min: 6, max: 7} }
+                draw:
+                    text:
+                        visible: false
+        country-z7:
+            # South Ossetia and Abkhazia aren't countries (they are disputed areas)
+            filter: { name: true, kind: [country], $zoom: { min: 7, max: 10 } }
+            draw:
+                text:
+                    priority: 3
+                    visible: *text_visible_admin
+                    text_source: function() { return feature["name:en"] || feature["name"]; }
+                    font:
+                        size: 18px
+                        weight: 800
+                        fill: *text_fill
+                        stroke: { color: *text_stroke, width: 4 }
+                        transform: uppercase
+#                icons:
+#                    size: [[13, 12px], [15, 18px]]
+#                    interactive: true
+#                    sprite: *townspot_sprite
+            small-ones-z7:
+                filter: { name: [Liechtenstein,San Marino,Civitatis Vaticanæ,Хуссар Ирыстон,Аҧсны - Абхазия], $zoom: {min: 7, max: 8} }
+                draw:
+                    text:
+                        visible: false
+
+
+        place-labels-z6:
+            filter: { kind: [state, province], $zoom: { min: 6, max: 14 } }
+
+            draw:
+              text:
+                visible: true
+                font:
+                  style: italic
+                  weight: 500
+                  size: 14px
+                  fill: *text_fill_admin
+
+        place-labels-z7:
+            filter: { kind: [state, province], $zoom: { min: 6, max: 14 } }
+
+            draw:
+              text:
+                visible: true
+                font:
+                  style: italic
+                  weight: 500
+                  size: 15px
+                  fill: *text_fill_admin
